@@ -1,0 +1,41 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1768581497005,
+      "tag": "0000_numerous_meggan",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1768581665317,
+      "tag": "0001_thankful_vision",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1768591900541,
+      "tag": "0002_youthful_slipstream",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1768593904928,
+      "tag": "0003_fine_captain_universe",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1768595196695,
+      "tag": "0004_misty_falcon",
+      "breakpoints": true
+    }
+  ]
+}
