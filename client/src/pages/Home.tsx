@@ -1,7 +1,7 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import { Calendar, CheckCircle, Clock, Shield, Users, Building2, ArrowRight, Sparkles } from "lucide-react";
+import { Calendar, CheckCircle, Clock, Shield, Users, Building2, ArrowRight, Sparkles, Sliders, Receipt, CalendarCheck } from "lucide-react";
 import { useLocation } from "wouter";
 import { useEffect } from "react";
 
@@ -95,7 +95,7 @@ export default function Home() {
                 <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
                   <feature.icon className="h-6 w-6 text-primary" />
                 </div>
-                <h3 className="font-semibold text-lg mb-2">{feature.title}</h3>
+                <h3 className="font-semibold text-lg mb-2 leading-tight">{feature.title}</h3>
                 <p className="text-muted-foreground text-sm">{feature.description}</p>
               </div>
             ))}
@@ -172,9 +172,19 @@ export default function Home() {
 
 const features = [
   {
-    icon: Calendar,
-    title: "Calendário Visual",
-    description: "Visualize todas as reservas em um calendário interativo com status coloridos."
+    icon: Sliders,
+    title: "Sistema com a maior quantidade de parâmetros da atualidade",
+    description: "Precisa de um parâmetro específico? Nós criamos sob medida para você."
+  },
+  {
+    icon: Receipt,
+    title: "Integração com emissores de boletos",
+    description: "Integração sem nenhum custo adicional para cobrança de reservas de áreas comuns."
+  },
+  {
+    icon: CalendarCheck,
+    title: "Facilidade de efetuar sua reserva",
+    description: "No calendário só aparecem as datas disponíveis, facilitando sua escolha."
   },
   {
     icon: Shield,
@@ -190,16 +200,6 @@ const features = [
     icon: Users,
     title: "Gestão de Moradores",
     description: "Cadastro por link, QR Code, manual ou importação em lote via Excel."
-  },
-  {
-    icon: CheckCircle,
-    title: "Aprovação Flexível",
-    description: "Escolha entre confirmação automática ou manual para cada área."
-  },
-  {
-    icon: Building2,
-    title: "Multi-Condomínio",
-    description: "Gerencie múltiplos condomínios em uma única plataforma."
   }
 ];
 
