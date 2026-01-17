@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/lib/trpc";
-import { Settings, Building2, Bell, Shield, Loader2, Save, Copy, Check, Sparkles, Link2, QrCode } from "lucide-react";
+import { Settings, Building2, Bell, Shield, Loader2, Save, Copy, Check, Sparkles, Link2, QrCode, Palette } from "lucide-react";
+import { IconThemeSelector } from "@/components/IconThemeSelector";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -99,6 +100,10 @@ export default function Configuracoes() {
             <TabsTrigger value="condominio" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm px-5 py-2.5 gap-2">
               <Building2 className="h-4 w-4" />
               Condomínio
+            </TabsTrigger>
+            <TabsTrigger value="aparencia" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm px-5 py-2.5 gap-2">
+              <Palette className="h-4 w-4" />
+              Aparência
             </TabsTrigger>
           </TabsList>
 
@@ -319,6 +324,28 @@ export default function Configuracoes() {
                     Os cadastros precisarão de aprovação do síndico.
                   </p>
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Aparência Tab */}
+          <TabsContent value="aparencia">
+            <Card className="glass-card">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-pink-500/20 to-purple-500/20 flex items-center justify-center">
+                    <Palette className="h-5 w-5 text-pink-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg font-semibold">Personalização Visual</CardTitle>
+                    <CardDescription>
+                      Personalize a aparência do aplicativo
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <IconThemeSelector />
               </CardContent>
             </Card>
           </TabsContent>

@@ -25,7 +25,7 @@ import { useIsMobile } from "@/hooks/useMobile";
 import { 
   LayoutDashboard, LogOut, PanelLeft, Users, Building2, CalendarDays, 
   MapPin, UserCheck, Settings, CalendarCheck, FileBarChart, ChevronRight,
-  Sparkles, Shield, User, Moon, Sun, Key
+  Sparkles, Shield, User, Moon, Sun, Key, QrCode, Star
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -37,6 +37,8 @@ import { InstallPWA, NotificationBell } from "./InstallPWA";
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard", color: "text-primary" },
   { icon: CalendarDays, label: "Reservas", path: "/reservas", color: "text-emerald-600" },
+  { icon: QrCode, label: "Check-in", path: "/checkin", color: "text-teal-600" },
+  { icon: Star, label: "Avaliações", path: "/avaliacoes", color: "text-amber-500" },
   { icon: MapPin, label: "Áreas Comuns", path: "/areas", color: "text-violet-600" },
   { icon: Users, label: "Moradores", path: "/moradores", color: "text-blue-600" },
   { icon: Building2, label: "Condomínios", path: "/condominios", color: "text-purple-600" },

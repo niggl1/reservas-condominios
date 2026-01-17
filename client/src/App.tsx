@@ -27,6 +27,8 @@ import Login from "./pages/Login";
 import Registro from "./pages/Registro";
 import RecuperarSenha from "./pages/RecuperarSenha";
 import Chaves from "./pages/Chaves";
+import Checkin from "./pages/Checkin";
+import Avaliacoes from "./pages/Avaliacoes";
 
 function Router() {
   return (
@@ -68,6 +70,8 @@ function Router() {
       <Route path="/usuarios" component={Usuarios} />
       <Route path="/relatorios" component={Relatorios} />
       <Route path="/chaves" component={Chaves} />
+      <Route path="/checkin" component={Checkin} />
+      <Route path="/avaliacoes" component={Avaliacoes} />
       
       {/* Fallback */}
       <Route path="/404" component={NotFound} />

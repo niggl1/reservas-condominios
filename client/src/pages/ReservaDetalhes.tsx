@@ -1,6 +1,7 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { QRCodeDisplay } from "@/components/QRCodeDisplay";
 import { trpc } from "@/lib/trpc";
 import { ArrowLeft, Loader2, CalendarDays, Clock, User, Home, History, CheckCircle, XCircle, DollarSign, FileText, ExternalLink } from "lucide-react";
 import { useLocation, useParams } from "wouter";
@@ -223,6 +224,18 @@ export default function ReservaDetalhes() {
             </CardContent>
           </Card>
         </div>
+
+        {/* QR Code para Check-in */}
+        {(reserva.status === 'confirmada' || reserva.status === 'pendente') && (
+          <QRCodeDisplay
+            protocolo={reserva.protocolo}
+            reservaId={reserva.id}
+            areaNome={area?.nome || `Área #${reserva.areaId}`}
+            dataReserva={format(new Date(reserva.dataReserva), "dd/MM/yyyy")}
+            horaInicio={reserva.horaInicio}
+            horaFim={reserva.horaFim}
+          />
+        )}
 
         {/* Timeline */}
         <Card className="premium-card">

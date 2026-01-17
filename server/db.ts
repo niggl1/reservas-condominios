@@ -16,7 +16,8 @@ import {
   interessesCancelamento, InsertInteresseCancelamento,
   notificacoes, InsertNotificacao,
   chaves, InsertChave,
-  movimentacaoChaves, InsertMovimentacaoChave
+  movimentacaoChaves, InsertMovimentacaoChave,
+  avaliacoes, InsertAvaliacao
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { nanoid } from 'nanoid';
@@ -639,6 +640,50 @@ export async function getReservasPendentes(condominioId: number) {
   return db.select().from(reservas)
     .where(and(eq(reservas.condominioId, condominioId), eq(reservas.status, 'pendente')))
     .orderBy(desc(reservas.createdAt));
+}
+
+export async function getReservasHoje(hoje: Date, user: { id: number; role: string }) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const startOfDay = new Date(hoje);
+  startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay = new Date(hoje);
+  endOfDay.setHours(23, 59, 59, 999);
+  
+  // Buscar reservas de hoje com dados de área e morador
+  const reservasHoje = await db.select({
+    id: reservas.id,
+    protocolo: reservas.protocolo,
+    areaId: reservas.areaId,
+    moradorId: reservas.moradorId,
+    condominioId: reservas.condominioId,
+    dataReserva: reservas.dataReserva,
+    horaInicio: reservas.horaInicio,
+    horaFim: reservas.horaFim,
+    status: reservas.status,
+    areaNome: areasComuns.nome,
+    moradorNome: moradores.nome,
+  })
+    .from(reservas)
+    .leftJoin(areasComuns, eq(reservas.areaId, areasComuns.id))
+    .leftJoin(moradores, eq(reservas.moradorId, moradores.id))
+    .where(and(
+      gte(reservas.dataReserva, startOfDay),
+      lte(reservas.dataReserva, endOfDay),
+      or(
+        eq(reservas.status, 'confirmada'),
+        eq(reservas.status, 'utilizada')
+      )
+    ))
+    .orderBy(asc(reservas.horaInicio));
+  
+  // Transformar para o formato esperado
+  return reservasHoje.map(r => ({
+    ...r,
+    area: { nome: r.areaNome },
+    morador: { nome: r.moradorNome }
+  }));
 }
 
 export async function confirmarReserva(id: number) {
@@ -1378,4 +1423,152 @@ export async function getRelatorioChaves(condominioId: number) {
     chaves: chavesDetalhadas,
     movimentacoes: ultimasMovimentacoes,
   };
+}
+
+
+// ==================== AVALIAÇÕES ====================
+export async function createAvaliacao(data: InsertAvaliacao) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(avaliacoes).values(data);
+  return { id: result[0].insertId };
+}
+
+export async function getAvaliacaoByReserva(reservaId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.select()
+    .from(avaliacoes)
+    .where(eq(avaliacoes.reservaId, reservaId))
+    .limit(1);
+  
+  return result[0] || null;
+}
+
+export async function getAvaliacoesByArea(areaId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db.select({
+    id: avaliacoes.id,
+    reservaId: avaliacoes.reservaId,
+    moradorId: avaliacoes.moradorId,
+    moradorNome: moradores.nome,
+    areaId: avaliacoes.areaId,
+    notaGeral: avaliacoes.notaGeral,
+    notaLimpeza: avaliacoes.notaLimpeza,
+    notaConservacao: avaliacoes.notaConservacao,
+    notaAtendimento: avaliacoes.notaAtendimento,
+    comentario: avaliacoes.comentario,
+    recomendaria: avaliacoes.recomendaria,
+    problemaReportado: avaliacoes.problemaReportado,
+    descricaoProblema: avaliacoes.descricaoProblema,
+    isPublica: avaliacoes.isPublica,
+    respondida: avaliacoes.respondida,
+    respostaSindico: avaliacoes.respostaSindico,
+    dataResposta: avaliacoes.dataResposta,
+    createdAt: avaliacoes.createdAt,
+  })
+  .from(avaliacoes)
+  .leftJoin(moradores, eq(avaliacoes.moradorId, moradores.id))
+  .where(and(eq(avaliacoes.areaId, areaId), eq(avaliacoes.isPublica, true)))
+  .orderBy(desc(avaliacoes.createdAt));
+}
+
+export async function getAvaliacoesByCondominio(condominioId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db.select({
+    id: avaliacoes.id,
+    reservaId: avaliacoes.reservaId,
+    moradorId: avaliacoes.moradorId,
+    moradorNome: moradores.nome,
+    areaId: avaliacoes.areaId,
+    areaNome: areasComuns.nome,
+    notaGeral: avaliacoes.notaGeral,
+    notaLimpeza: avaliacoes.notaLimpeza,
+    notaConservacao: avaliacoes.notaConservacao,
+    notaAtendimento: avaliacoes.notaAtendimento,
+    comentario: avaliacoes.comentario,
+    recomendaria: avaliacoes.recomendaria,
+    problemaReportado: avaliacoes.problemaReportado,
+    descricaoProblema: avaliacoes.descricaoProblema,
+    isPublica: avaliacoes.isPublica,
+    respondida: avaliacoes.respondida,
+    respostaSindico: avaliacoes.respostaSindico,
+    dataResposta: avaliacoes.dataResposta,
+    createdAt: avaliacoes.createdAt,
+  })
+  .from(avaliacoes)
+  .leftJoin(moradores, eq(avaliacoes.moradorId, moradores.id))
+  .leftJoin(areasComuns, eq(avaliacoes.areaId, areasComuns.id))
+  .where(eq(avaliacoes.condominioId, condominioId))
+  .orderBy(desc(avaliacoes.createdAt));
+}
+
+export async function getMediaAvaliacaoArea(areaId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.select({
+    mediaGeral: sql<number>`AVG(${avaliacoes.notaGeral})`,
+    mediaLimpeza: sql<number>`AVG(${avaliacoes.notaLimpeza})`,
+    mediaConservacao: sql<number>`AVG(${avaliacoes.notaConservacao})`,
+    mediaAtendimento: sql<number>`AVG(${avaliacoes.notaAtendimento})`,
+    totalAvaliacoes: sql<number>`COUNT(*)`,
+    percentualRecomenda: sql<number>`AVG(CASE WHEN ${avaliacoes.recomendaria} = 1 THEN 100 ELSE 0 END)`,
+  })
+  .from(avaliacoes)
+  .where(eq(avaliacoes.areaId, areaId));
+  
+  return result[0] || null;
+}
+
+export async function responderAvaliacao(id: number, resposta: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(avaliacoes)
+    .set({ 
+      respondida: true, 
+      respostaSindico: resposta,
+      dataResposta: new Date()
+    })
+    .where(eq(avaliacoes.id, id));
+}
+
+export async function getReservasSemAvaliacao(moradorId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  // Buscar reservas utilizadas que não têm avaliação
+  const reservasUtilizadas = await db.select({
+    id: reservas.id,
+    protocolo: reservas.protocolo,
+    areaId: reservas.areaId,
+    areaNome: areasComuns.nome,
+    dataReserva: reservas.dataReserva,
+    horaInicio: reservas.horaInicio,
+    horaFim: reservas.horaFim,
+  })
+  .from(reservas)
+  .leftJoin(areasComuns, eq(reservas.areaId, areasComuns.id))
+  .where(and(
+    eq(reservas.moradorId, moradorId),
+    eq(reservas.status, 'utilizada')
+  ))
+  .orderBy(desc(reservas.dataReserva));
+  
+  // Filtrar as que não têm avaliação
+  const reservasSemAvaliacao = [];
+  for (const reserva of reservasUtilizadas) {
+    const avaliacao = await getAvaliacaoByReserva(reserva.id);
+    if (!avaliacao) {
+      reservasSemAvaliacao.push(reserva);
+    }
+  }
+  
+  return reservasSemAvaliacao;
 }

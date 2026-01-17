@@ -926,6 +926,14 @@ const reservasRouter = router({
       return db.getReservasByMorador(input.moradorId);
     }),
   
+  listHoje: protectedProcedure
+    .query(async ({ ctx }) => {
+      // Buscar reservas de hoje para todos os condomínios que o usuário tem acesso
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      return db.getReservasHoje(hoje, ctx.user);
+    }),
+  
   listByAreaAndDate: protectedProcedure
     .input(z.object({ areaId: z.number(), data: z.date() }))
     .query(async ({ input }) => {
@@ -1228,6 +1236,91 @@ const reservasRouter = router({
         nomeUsuario: ctx.user.name || 'Usuário',
       });
       return { success: true };
+    }),
+
+  // Check-in via QR Code ou protocolo
+  checkin: protectedProcedure
+    .input(z.object({ protocolo: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const reserva = await db.getReservaByProtocolo(input.protocolo);
+      if (!reserva) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Reserva não encontrada' });
+      }
+
+      // Verificar se reserva está confirmada
+      if (reserva.status !== 'confirmada') {
+        if (reserva.status === 'pendente') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Reserva ainda não foi aprovada' });
+        }
+        if (reserva.status === 'cancelada') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Reserva foi cancelada' });
+        }
+        if (reserva.status === 'utilizada') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Check-in já foi realizado para esta reserva' });
+        }
+      }
+
+      // Verificar se é o dia da reserva
+      const hoje = new Date();
+      const dataReserva = new Date(reserva.dataReserva);
+      hoje.setHours(0, 0, 0, 0);
+      dataReserva.setHours(0, 0, 0, 0);
+      
+      if (hoje.getTime() !== dataReserva.getTime()) {
+        const diffDays = Math.ceil((dataReserva.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+        if (diffDays > 0) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: `Check-in só pode ser feito no dia da reserva. Faltam ${diffDays} dia(s).` });
+        } else {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'A data da reserva já passou' });
+        }
+      }
+
+      // Marcar como utilizada
+      await db.marcarReservaUtilizada(reserva.id);
+      await db.createTimelineAcao({
+        reservaId: reserva.id,
+        userId: ctx.user.id,
+        acao: 'utilizada',
+        descricao: 'Check-in realizado via QR Code',
+        perfilUsuario: ctx.user.role,
+        nomeUsuario: ctx.user.name || 'Usuário',
+      });
+
+      // Buscar dados completos para retorno
+      const morador = await db.getMoradorById(reserva.moradorId);
+      const area = await db.getAreaComumById(reserva.areaId);
+
+      return {
+        success: true,
+        reserva: {
+          protocolo: reserva.protocolo,
+          areaNome: area?.nome || 'Área',
+          moradorNome: morador?.nome || 'Morador',
+          dataReserva: new Date(reserva.dataReserva).toLocaleDateString('pt-BR'),
+          horaInicio: reserva.horaInicio,
+          horaFim: reserva.horaFim,
+          status: 'utilizada'
+        }
+      };
+    }),
+
+  // Buscar reserva por protocolo (mutation para o scanner)
+  getByProtocolo: protectedProcedure
+    .input(z.object({ protocolo: z.string() }))
+    .mutation(async ({ input }) => {
+      const reserva = await db.getReservaByProtocolo(input.protocolo);
+      if (!reserva) {
+        return null;
+      }
+
+      const morador = await db.getMoradorById(reserva.moradorId);
+      const area = await db.getAreaComumById(reserva.areaId);
+
+      return {
+        ...reserva,
+        morador: morador ? { nome: morador.nome } : null,
+        area: area ? { nome: area.nome } : null
+      };
     }),
 });
 
@@ -1621,6 +1714,81 @@ const chavesRouter = router({
     }),
 });
 
+// ==================== AVALIAÇÕES ROUTER ====================
+const avaliacoesRouter = router({
+  // Criar avaliação
+  create: protectedProcedure
+    .input(z.object({
+      reservaId: z.number(),
+      moradorId: z.number(),
+      areaId: z.number(),
+      condominioId: z.number(),
+      notaGeral: z.number().min(1).max(5),
+      notaLimpeza: z.number().min(1).max(5).optional(),
+      notaConservacao: z.number().min(1).max(5).optional(),
+      notaAtendimento: z.number().min(1).max(5).optional(),
+      comentario: z.string().optional(),
+      recomendaria: z.boolean().default(true),
+      problemaReportado: z.boolean().default(false),
+      descricaoProblema: z.string().optional(),
+      isPublica: z.boolean().default(true),
+    }))
+    .mutation(async ({ input }) => {
+      // Verificar se já existe avaliação para esta reserva
+      const existente = await db.getAvaliacaoByReserva(input.reservaId);
+      if (existente) {
+        throw new TRPCError({ code: 'CONFLICT', message: 'Já existe uma avaliação para esta reserva' });
+      }
+      return db.createAvaliacao(input);
+    }),
+
+  // Buscar avaliação por reserva
+  getByReserva: protectedProcedure
+    .input(z.object({ reservaId: z.number() }))
+    .query(async ({ input }) => {
+      return db.getAvaliacaoByReserva(input.reservaId);
+    }),
+
+  // Listar avaliações por área
+  listByArea: protectedProcedure
+    .input(z.object({ areaId: z.number() }))
+    .query(async ({ input }) => {
+      return db.getAvaliacoesByArea(input.areaId);
+    }),
+
+  // Listar avaliações por condomínio
+  listByCondominio: protectedProcedure
+    .input(z.object({ condominioId: z.number() }))
+    .query(async ({ input }) => {
+      return db.getAvaliacoesByCondominio(input.condominioId);
+    }),
+
+  // Média de avaliação por área
+  mediaByArea: protectedProcedure
+    .input(z.object({ areaId: z.number() }))
+    .query(async ({ input }) => {
+      return db.getMediaAvaliacaoArea(input.areaId);
+    }),
+
+  // Responder avaliação (síndico)
+  responder: protectedProcedure
+    .input(z.object({
+      id: z.number(),
+      resposta: z.string().min(1),
+    }))
+    .mutation(async ({ input }) => {
+      await db.responderAvaliacao(input.id, input.resposta);
+      return { success: true };
+    }),
+
+  // Reservas pendentes de avaliação
+  pendentes: protectedProcedure
+    .input(z.object({ moradorId: z.number() }))
+    .query(async ({ input }) => {
+      return db.getReservasSemAvaliacao(input.moradorId);
+    }),
+});
+
 // ==================== APP ROUTER ====================
 export const appRouter = router({
   system: systemRouter,
@@ -1642,6 +1810,7 @@ export const appRouter = router({
   relatorios: relatoriosRouter,
   push: pushRouter,
   chaves: chavesRouter,
+  avaliacoes: avaliacoesRouter,
 });
 
 export type AppRouter = typeof appRouter;

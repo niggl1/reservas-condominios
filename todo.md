@@ -15,6 +15,7 @@
 - [x] Schema de termos de aceite e assinaturas digitais
 - [x] Schema de notificações de interesse em cancelamento
 - [x] Schema de bloqueio de moradores
+- [x] Schema de avaliações pós-uso
 - [x] Migração do banco de dados
 
 ## APIs do Backend (tRPC)
@@ -34,6 +35,8 @@
 - [x] API de termos e assinaturas digitais
 - [x] API de interesse em cancelamento
 - [x] API de timeline de ações
+- [x] API de check-in via QR Code
+- [x] API de avaliações (criar, listar, responder)
 
 ## Interfaces do Frontend
 - [x] Página de login com autenticação
@@ -43,12 +46,14 @@
 - [x] Gestão de áreas comuns com todas as configurações
 - [x] Calendário de reservas (verde=confirmada, amarelo=pendente)
 - [x] Formulário de nova reserva com validações
-- [x] Detalhes da reserva com timeline
+- [x] Detalhes da reserva com timeline e QR Code
 - [x] Minhas Reservas (para moradores)
 - [x] Tela de aprovações pendentes
 - [x] Configurações globais do condomínio
 - [x] Página de auto-cadastro público (link/QR)
 - [x] Gestão de usuários e permissões
+- [x] Página de Check-in (portaria/síndico)
+- [x] Página de Avaliações
 
 ## Autenticação e Hierarquia
 - [x] Login via Manus OAuth
@@ -78,12 +83,12 @@
 - [x] Dashboard com cards de acesso rápido
 - [x] Ícones cartoon 3D para áreas
 - [x] Galeria de fotos por área
-- [ ] Modo escuro
+- [x] Modo escuro (toggle no menu)
 - [x] Relatórios exportáveis (PDF/Excel)
 
-## Funcionalidades Extras (Futuras)
-- [ ] QR Code de check-in
-- [ ] Avaliação pós-uso
+## Funcionalidades Extras
+- [x] QR Code de check-in
+- [x] Avaliação pós-uso
 - [x] Notificações push (lembretes)
 - [x] Importação de moradores via Excel
 
@@ -210,10 +215,38 @@
 - [x] Relatório de chaves em posse de moradores
 - [x] Testes unitários do controle de chaves (29 testes)
 
+## QR Code de Check-in
+- [x] Componente de exibição de QR Code na reserva
+- [x] Componente de scanner de QR Code
+- [x] API de check-in via protocolo
+- [x] API de busca de reserva por protocolo
+- [x] API de listagem de reservas do dia
+- [x] Página de Check-in para portaria/síndico
+- [x] QR Code na página de detalhes da reserva
+- [x] Validação de status da reserva no check-in
+- [x] Atualização de status para "utilizada" após check-in
+- [x] Menu de Check-in no sidebar
+
+## Sistema de Avaliação Pós-uso
+- [x] Schema de avaliações no banco de dados
+- [x] API de criação de avaliação
+- [x] API de busca de avaliação por reserva
+- [x] API de listagem de avaliações por área
+- [x] API de listagem de avaliações por condomínio
+- [x] API de média de avaliação por área
+- [x] API de resposta do síndico à avaliação
+- [x] API de reservas pendentes de avaliação
+- [x] Componente de estrelas (StarRating)
+- [x] Modal de avaliação com notas e comentários
+- [x] Página de Avaliações (pendentes e todas)
+- [x] Reporte de problemas na avaliação
+- [x] Resposta do síndico às avaliações
+- [x] Menu de Avaliações no sidebar
 
 ## Personalização de Ícones PWA
-- [ ] Gerar novos ícones PWA com design moderno
-- [ ] Criar pasta para tema de ícones "clássico" (atual)
-- [ ] Criar pasta para tema de ícones "moderno" (novo)
-- [ ] Implementar seleção de tema de ícones nas configurações
-- [ ] Atualizar manifest.json dinamicamente baseado na escolha
+- [x] Pasta para tema de ícones "clássico" (RESERVAS99.png)
+- [x] Pasta para tema de ícones "moderno" (RESERVAS99.png)
+- [x] Componente de seleção de tema de ícones (IconThemeSelector)
+- [x] Aba de Aparência nas Configurações
+- [x] Preview dos temas de ícones
+- [x] Salvamento da preferência de tema no localStorage
